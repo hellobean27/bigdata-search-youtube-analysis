@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables / API keys
+.env
+*.env
+config.json
+secrets.json
+
+# Raw data
+data/raw/
+data/processed/
+*.parquet
+*.avro
+
+# Large files
+*.zip
+*.tar
+*.gz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
