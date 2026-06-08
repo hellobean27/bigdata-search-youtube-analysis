@@ -1,4 +1,4 @@
-# 최근 30일 Google·Naver 검색 관심도와 YouTube 영상 성과 지표의 관계 분석
+# # 최근 30일 Google·Naver 검색 관심도와 최근 업로드 YouTube 영상의 누적 성과 지표 분석
 
 ## 1. 프로젝트 개요
 
