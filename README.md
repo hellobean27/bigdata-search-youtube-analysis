@@ -114,3 +114,18 @@ Google Trends와 Naver DataLab의 값은 절대 검색량이 아니라 상대적
 ## 10. AI Tool Usage
 
 - ChatGPT: 프로젝트 주제 구체화, README 구조 검토, 분석 질문 설계 보조
+
+- ## 최종 산출물 요약
+
+- 검색 키워드: 20개
+- YouTube 검색 결과: 600개
+- 고유 YouTube 영상: 581개
+- 추가 YouTube 댓글 raw: 58,787개
+- HDFS raw 전체 용량: 약 120.5MB
+- Spark 결과:
+  - results/spark_keyword_summary.csv
+  - results/spark_category_summary.csv
+  - results/spark_correlation.csv
+  - results/spark_comment_keyword_summary.csv
+
+대용량 댓글 raw 원본은 GitHub에 업로드하지 않고 HDFS에 저장하였다. GitHub에는 data/sample 경로에 1,000줄 샘플만 포함하였다.
