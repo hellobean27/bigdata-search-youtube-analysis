@@ -131,3 +131,131 @@ Google Trends와 Naver DataLab의 값은 절대 검색량이 아니라 상대적
   - results/spark_comment_keyword_summary.csv
 
 대용량 댓글 raw 원본은 GitHub에 업로드하지 않고 HDFS에 저장하였다. GitHub에는 data/sample 경로에 1,000줄 샘플만 포함하였다.
+
+
+## 실행 방법
+
+본 프로젝트는 HDP Sandbox 또는 강의 실습 환경의 `maria_dev` 계정 기준으로 실행하였다.  
+HDFS 경로와 계정명은 실습 환경에 따라 수정이 필요할 수 있다.
+
+대용량 raw 원본 데이터는 GitHub에 업로드하지 않고 HDFS에 저장하였다.  
+GitHub에는 재현 가능성을 위해 코드, 결과 CSV, `data/sample/` 경로의 샘플 데이터만 포함하였다.
+
+### 1. 실행 전 준비 파일
+
+Spark 분석을 재실행하려면 로컬 또는 Sandbox 환경에 다음 원본 파일이 준비되어 있어야 한다.
+
+```text
+youtube_trends_merged_20keywords.csv
+youtube_comments_raw.jsonl
+youtube_comments_summary.csv
+youtube_comments_error_log.csv
+```
+
+댓글 raw 원본 파일은 약 120MB 규모이므로 GitHub에는 업로드하지 않고, HDFS에 직접 업로드하여 사용한다.
+
+### 2. HDFS 경로 생성
+
+```bash
+hdfs dfs -mkdir -p /user/maria_dev/search_youtube/raw
+hdfs dfs -mkdir -p /user/maria_dev/search_youtube/raw/comments
+hdfs dfs -mkdir -p /user/maria_dev/search_youtube/processed
+hdfs dfs -mkdir -p /user/maria_dev/search_youtube/results
+```
+
+### 3. 원본 데이터 HDFS 업로드
+
+```bash
+hdfs dfs -put -f youtube_trends_merged_20keywords.csv /user/maria_dev/search_youtube/raw/
+
+hdfs dfs -put -f youtube_comments_raw.jsonl /user/maria_dev/search_youtube/raw/comments/
+hdfs dfs -put -f youtube_comments_summary.csv /user/maria_dev/search_youtube/raw/comments/
+hdfs dfs -put -f youtube_comments_error_log.csv /user/maria_dev/search_youtube/raw/comments/
+```
+
+### 4. HDFS raw 데이터 용량 확인
+
+```bash
+hdfs dfs -du -h -s /user/maria_dev/search_youtube/raw
+```
+
+본 프로젝트에서는 HDFS raw 전체 용량이 약 120.5MB로 확인되었다.
+
+### 5. YouTube 영상 성과 Spark 분석 실행
+
+```bash
+cd ~/search_youtube_project/scripts
+
+nohup env PYTHONIOENCODING=utf-8 spark-submit --master 'local[2]' spark_analyze_no_hive.py > spark_run.log 2>&1 &
+```
+
+실행 로그 확인:
+
+```bash
+tail -50 spark_run.log
+```
+
+정상 실행 시 다음 메시지를 확인할 수 있다.
+
+```text
+Spark analysis completed successfully.
+```
+
+### 6. YouTube 댓글 raw Spark 분석 실행
+
+```bash
+nohup env PYTHONIOENCODING=utf-8 spark-submit --master 'local[2]' spark_analyze_comments.py > spark_comments_run.log 2>&1 &
+```
+
+실행 로그 확인:
+
+```bash
+tail -50 spark_comments_run.log
+```
+
+정상 실행 시 다음 메시지를 확인할 수 있다.
+
+```text
+Comment analysis completed successfully.
+```
+
+### 7. Spark 결과 확인
+
+```bash
+hdfs dfs -ls -R /user/maria_dev/search_youtube/results
+```
+
+주요 결과 경로는 다음과 같다.
+
+```text
+/user/maria_dev/search_youtube/results/spark_keyword_summary
+/user/maria_dev/search_youtube/results/spark_category_summary
+/user/maria_dev/search_youtube/results/spark_correlation
+/user/maria_dev/search_youtube/results/spark_comment_keyword_summary
+```
+
+GitHub에는 위 결과를 병합한 CSV 파일을 `results/` 경로에 업로드하였다.
+
+```text
+results/spark_keyword_summary.csv
+results/spark_category_summary.csv
+results/spark_correlation.csv
+results/spark_comment_keyword_summary.csv
+```
+
+### 8. Hive 분석
+
+Spark 결과 파일을 Hive 외부 테이블로 연결한 뒤 다음 분석을 수행하였다.
+
+```sql
+USE search_youtube;
+SHOW TABLES;
+```
+
+주요 조회 내용은 다음과 같다.
+
+```text
+1. 키워드별 평균 일조회수 TOP 10
+2. 분야별 평균 조회수, 평균 일조회수, 100만 이상 비율
+3. Google/Naver 검색 관심도와 YouTube 성과 지표 간 상관관계
+```
